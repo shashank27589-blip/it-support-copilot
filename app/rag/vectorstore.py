@@ -1,4 +1,3 @@
-import time
 from pinecone import Pinecone , ServerlessSpec
 from langchain_openai import OpenAIEmbeddings
 from langchain_pinecone import PineconeVectorStore
@@ -73,9 +72,11 @@ def ensure_index():
             current_dimension = index_info.get("dimension")
 
         if current_dimension is not None and current_dimension != desired_dimension:
-            pc.delete_index(name=settings.pinecone_index_name)
-            while settings.pinecone_index_name in [x["name"] for x in pc.list_indexes()]:
-                time.sleep(1)
+            raise RuntimeError(
+                f"Pinecone index '{settings.pinecone_index_name}' has dimension {current_dimension}, "
+                f"but embedding model '{settings.embedding_model}' requires {desired_dimension}. "
+                "Choose a new index name or migrate the existing index; it was left untouched."
+            )
 
     if settings.pinecone_index_name not in [x["name"] for x in pc.list_indexes()]:
         pc.create_index(
